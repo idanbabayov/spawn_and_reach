@@ -21,6 +21,7 @@ setup(
     entry_points={#executable_name = pkg_name.py_file_name:main
         'console_scripts': [
                             "turtles_manager =spawn_and_reach.turtles_manager:main",
+                            "turtle_navigator =spawn_and_reach.turtle_navigator:main"
 
         ],
     },
