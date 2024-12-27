@@ -59,9 +59,9 @@ class TurtlesManager(Node):
             self.get_logger().info("The turtle: " +response.name + " has been spawned!!")
 
             msg = Pose2D()
-            msg.x = response.x
-            msg.y = response.y
-            msg.theta = response.theta
+            msg.x = request.x
+            msg.y = request.y
+            msg.theta = request.theta
 
             self.turtle_location_publisher.publish(msg) #publish the location of the turtle to the navigator node
 
