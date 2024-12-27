@@ -51,17 +51,17 @@ class TurtlesManager(Node):
         request.name = turtle_to_spawn[3]
 
         future = client.call_async(request)
-        future.add_done_callback(partial(self.callback_call_spawn_turtle))  # this is like spining
+        future.add_done_callback(partial(self.callback_call_spawn_turtle,turtle_to_spawn = turtle_to_spawn))  # this is like spining
 
-    def callback_call_spawn_turtle(self, future):
+    def callback_call_spawn_turtle(self, future, turtle_to_spawn):
         try:
             response = future.result()
-            self.get_logger().info("The turtle: " +response.name + " has been spawned!!")
+            self.get_logger().info("The turtle: " +response.name + " has been spawned")
 
             msg = Pose2D()
-            msg.x = request.x
-            msg.y = request.y
-            msg.theta = request.theta
+            msg.x = turtle_to_spawn[0]
+            msg.y = turtle_to_spawn[1]
+            msg.theta = turtle_to_spawn[2]
 
             self.turtle_location_publisher.publish(msg) #publish the location of the turtle to the navigator node
 
