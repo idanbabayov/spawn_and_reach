@@ -3,7 +3,7 @@ import rclpy
 from rclpy.node import Node
 from turtlesim.srv import SetPen,Kill,Spawn
 from functools import partial
-from geometry_msgs.msg import Pose2D
+from geometry_msgs.msg import Pose
 import random
 #################test_second_commit##########
 
@@ -14,7 +14,7 @@ class TurtlesManager(Node):
         super().__init__("Turtles_manager") #the name of the node
         self.get_logger().info("Welcome to the game!")
         self.create_timer(4.0, self.turtle_spawner) # Pass the function reference, not call it.
-        self.turtle_location_publisher = self.create_publisher(Pose2D,"turtle_position",10)
+        self.turtle_location_publisher = self.create_publisher(Pose,"turtle_position",10)
 
     def turtle_spawner(self):
         new_turtle = self.random_turtle()
