@@ -1,12 +1,13 @@
 #!/usr/BIN/python3.10
 import rclpy
+import numpy as np
 from rclpy.node import Node
 from geometry_msgs.msg import Pose2D
 from geometry_msgs.msg import Twist
 
 
 #####################################
-#In this code we will use the  Cubic Bézier curve Method.
+#In this code we will use the  Cubic Bézier curve Method in it's Polynomial form!.
 #The key idea is to compute the waypoints or positions along the Bézier curve, 
 #and then send these positions as velocity commands(linear/angular) (using geometry_msgs/Twist) to control the robot's motion.
 #Steps:
@@ -37,9 +38,22 @@ class TurtleNavigator(Node):
         super().__init__("Turtle_navigator") #the name of the node
         self.get_logger().info("Starting the Navigator!")
         self.turtle_location_subscriber = self.create_subscription(Pose2D,"turtle_position",self.callback_turtle_location,10)
+        #TODO NEED TO PASS ALSO TURTLE1 INIT POSITION! 
     
     def callback_turtle_location(self,msg):
         pass
+    
+    def bezier (self,t,PO,P1,P2,P3):
+        x = (1 - t)**3 * P0[0] + 3 * (1 - t)**2 * t * P1[0] + 3 * (1 - t) * t**2 * P2[0] + t**3 * P3[0]
+        y = (1 - t)**3 * P0[1] + 3 * (1 - t)**2 * t * P1[1] + 3 * (1 - t) * t**2 * P2[1] + t**3 * P3[1]
+        return np.array([x, y])
+    
+    def bezier_derivative(self, t, P0, P1, P2, P3):
+        #Derivative of the cubic Bézier curve to calculate direction at time t
+        dx = -3 * (1 - t)**2 * P0[0] + 3 * (1 - t)**2 * P1[0] + 6 * (1 - t) * t * P2[0] - 3 * t**2 * P3[0]
+        dy = -3 * (1 - t)**2 * P0[1] + 3 * (1 - t)**2 * P1[1] + 6 * (1 - t) * t * P2[1] - 3 * t**2 * P3[1]
+        return np.array([dx, dy])
+
 
 
 
