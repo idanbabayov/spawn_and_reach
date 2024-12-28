@@ -36,16 +36,16 @@ from math import atan2
 #  This difference represents how much the robot needs to turn to align itself with the path.
 ######################################
 
-P0 = [0.0, 0.0]  # Initial position
+P0 = [-0.1, 0.0]  # Initial position
 P1 = [0.0, 0.0]  # Control points, to be computed
 P2 = [0.0, 0.0]
-P3 = [0.0, 0.0]  # Target position
+P3 = [-0.1, 0.0]  # Target position
 current_heading = 0.0
 
 class TurtleNavigator(Node):
     def __init__(self):
         super().__init__("Turtle_navigator")
-        self.get_logger().info("Starting the Navigator!!!!")
+        self.get_logger().info("Starting the Navigator!!")
         self.turtle_location_subscriber = self.create_subscription(Pose, "turtle_position", self.callback_turtle_location, 1)
         self.main_turtle_location_subscriber = self.create_subscription(Pose, "turtle1/pose", self.callback_main_turtle_location, 1)
         self.velocity_publisher = self.create_publisher(Twist, "turtle1/cmd_vel", 1)
@@ -54,28 +54,40 @@ class TurtleNavigator(Node):
     def start_algorithm(self):
         global P0, P1, P2, P3, current_heading
 
-        if P0 != [0.0, 0.0] and P3 != [0.0, 0.0]:  # Check if both P0 and P3 are initialized
+        if P0 != [-0.1, 0.0] and P3 != [-0.1, 0.0]:  # Check if both P0 and P3 are initialized
             self.compute_bezier_control_points(P0, P3)
             counter = 0
-            for t in np.linspace(0, 1, num=40):  # Generate 8 points along the curve
+            for t in np.linspace(0, 1, num=22):  # Generate 8 points along the curve
+                if np.linalg.norm(np.array(P0)-np.array(P3))<=1.0:
+                        stop_cmd = Twist()
+                        stop_cmd.linear.x = 0.0
+                        stop_cmd.linear.y = 0.0
+                        stop_cmd.angular.z = 0.0
+                        self.velocity_publisher.publish(stop_cmd)
+                        print("stop the turtle@@@@@@@@@@@@@@@@@@@@@@@@@")
+                        break
                 waypoint = self.bezier(t, P0, P1, P2, P3)
                 tangent = self.bezier_derivative(t, P0, P1, P2, P3)
                 desired_heading = atan2(tangent[1], tangent[0])
                 rotation_to_align_with_path = current_heading - desired_heading
-                print("rot:",rotation_to_align_with_path)
-                print("linearx,y:",tangent)
+
+
+                
+                #print("rot:",rotation_to_align_with_path)
+                #print("linearx,y:",tangent)
                 counter+=1
                 print("counter",counter)
+                print("the location of the target:",np.array(P3))
 
                 move_cmd = Twist()
                 move_cmd.linear.x = tangent[0]
                 move_cmd.linear.y = tangent[1]
                 move_cmd.angular.z = rotation_to_align_with_path
                 self.velocity_publisher.publish(move_cmd)
-                time.sleep(0.12)  # Sleep for 0.2 seconds
+                time.sleep(0.21)  # Sleep for 0.2 seconds
 
 
-    def compute_bezier_control_points(self, P0, P3, tangent_scale=0.5):
+    def compute_bezier_control_points(self, P0, P3, tangent_scale=0.2):
         global P1, P2
         P0 = np.array(P0)
         P3 = np.array(P3)
@@ -113,6 +125,14 @@ class TurtleNavigator(Node):
         P3 = np.array(P3)
         dx = -3 * (1 - t)**2 * P0[0] + 3 * (1 - t)**2 * P1[0] + 6 * (1 - t) * t * P2[0] - 3 * t**2 * P3[0]
         dy = -3 * (1 - t)**2 * P0[1] + 3 * (1 - t)**2 * P1[1] + 6 * (1 - t) * t * P2[1] - 3 * t**2 * P3[1]
+        if dx>8.0:
+            dx = 8.0
+        elif dx<-8:
+            dx =-8.0
+        if dy>8.0:
+            dy = 8.0
+        elif dy<-8.0:
+            dy =-8.0    
         return np.array([dx, dy])
 
 def main(args=None):
