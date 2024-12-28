@@ -3,7 +3,7 @@ import rclpy
 from rclpy.node import Node
 from turtlesim.srv import SetPen,Kill,Spawn
 from functools import partial
-from geometry_msgs.msg import Pose
+from turtlesim.msg import Pose
 import random
 #################test_second_commit##########
 
@@ -13,7 +13,7 @@ class TurtlesManager(Node):
     def __init__(self):
         super().__init__("Turtles_manager") #the name of the node
         self.get_logger().info("Welcome to the game!")
-        self.create_timer(4.0, self.turtle_spawner) # Pass the function reference, not call it.
+        self.create_timer(10.0, self.turtle_spawner) # Pass the function reference, not call it.
         self.turtle_location_publisher = self.create_publisher(Pose,"turtle_position",10)
 
     def turtle_spawner(self):
@@ -56,9 +56,9 @@ class TurtlesManager(Node):
     def callback_call_spawn_turtle(self, future, turtle_to_spawn):
         try:
             response = future.result()
-            self.get_logger().info("The turtle: " +response.name + " has been spawned")
+            self.get_logger().info("The turtle: " +response.name + " has been spawned!")
 
-            msg = Pose2D()
+            msg = Pose()
             msg.x = turtle_to_spawn[0]
             msg.y = turtle_to_spawn[1]
             msg.theta = turtle_to_spawn[2]
