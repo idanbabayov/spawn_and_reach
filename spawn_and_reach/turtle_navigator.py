@@ -45,11 +45,11 @@ current_heading = 0.0
 class TurtleNavigator(Node):
     def __init__(self):
         super().__init__("Turtle_navigator")
-        self.get_logger().info("Starting the Navigator!!")
+        self.get_logger().info("Starting the Navigator!")
         self.turtle_location_subscriber = self.create_subscription(Pose, "turtle_position", self.callback_turtle_location, 1)
         self.main_turtle_location_subscriber = self.create_subscription(Pose, "turtle1/pose", self.callback_main_turtle_location, 1)
         self.velocity_publisher = self.create_publisher(Twist, "turtle1/cmd_vel", 1)
-        self.create_timer(4.0, self.start_algorithm)
+        self.create_timer(2.0, self.start_algorithm)
 
     def start_algorithm(self):
         global P0, P1, P2, P3, current_heading
@@ -57,7 +57,7 @@ class TurtleNavigator(Node):
         if P0 != [-0.1, 0.0] and P3 != [-0.1, 0.0]:  # Check if both P0 and P3 are initialized
             self.compute_bezier_control_points(P0, P3)
             counter = 0
-            for t in np.linspace(0, 1, num=22):  # Generate 8 points along the curve
+            for t in np.linspace(0, 1, num=50):  # Generate 8 points along the curve
                 if np.linalg.norm(np.array(P0)-np.array(P3))<=1.0:
                         stop_cmd = Twist()
                         stop_cmd.linear.x = 0.0
@@ -80,14 +80,15 @@ class TurtleNavigator(Node):
                 print("the location of the target:",np.array(P3))
 
                 move_cmd = Twist()
+                
                 move_cmd.linear.x = tangent[0]
                 move_cmd.linear.y = tangent[1]
                 move_cmd.angular.z = rotation_to_align_with_path
                 self.velocity_publisher.publish(move_cmd)
-                time.sleep(0.21)  # Sleep for 0.2 seconds
+                time.sleep(2.0/49)  # Sleep for 0.2 seconds
 
 
-    def compute_bezier_control_points(self, P0, P3, tangent_scale=0.2):
+    def compute_bezier_control_points(self, P0, P3, tangent_scale=0.6):
         global P1, P2
         P0 = np.array(P0)
         P3 = np.array(P3)
