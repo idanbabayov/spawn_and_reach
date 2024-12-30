@@ -3,7 +3,9 @@ import rclpy
 import time
 import numpy as np
 from rclpy.node import Node
-from turtlesim.msg import Pose
+from my_robot_interfaces.msg import Turtle
+from my_robot_interfaces.msg import TurtleArray
+#from turtlesim.msg import Pose
 from geometry_msgs.msg import Twist
 from math import atan2
 
@@ -19,7 +21,7 @@ class TurtleNavigator(Node):
         
 
         # Create subscribers and publisher
-        self.turtle_location_subscriber = self.create_subscription(Pose, "turtle_position", self.callback_turtle_location, 1)
+        self.alive_turtles_subscriber = self.create_subscription(TurtleArray, "alive_turtles", self.callback_turtle_location, 10)
         self.main_turtle_location_subscriber = self.create_subscription(Pose, "turtle1/pose", self.callback_main_turtle_location, 1)
         self.velocity_publisher = self.create_publisher(Twist, "turtle1/cmd_vel", 1)
 
