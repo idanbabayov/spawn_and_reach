@@ -7,6 +7,7 @@ from my_robot_interfaces.msg import Turtle
 from my_robot_interfaces.msg import TurtleArray
 from my_robot_interfaces.srv import CatchTurtle
 from turtlesim.msg import Pose
+from std_srvs.srv import Empty
 import random
 
 turtle_counter = 1
@@ -45,10 +46,33 @@ class TurtlesManager(Node):
         try:
             self.alive_turtles.pop(0)######how to kill the specific turtle name????????? currently kill the latest one  
             respone = future.result()
+            self.clear_path()
             #self.get_logger().info("The turtle: " +response.name + " has been killed!")
             #self.publish_alive_turtles()
         except Exception as e:
             self.get_logger().error("service call failed %r" % (e,))
+    
+    def clear_path(self):
+        self.call_clear_path()
+    
+    def call_clear_path(self):
+        client = self.create_client(Empty,"clear")
+        while not client.wait_for_service(1.0):
+                self.get_logger().warn("waiting for server clear")
+        request = Empty.Request()
+        future = client.call_async(request)
+        future.add_done_callback(partial(self.callback_call_clear_path))  # this is like spining
+
+    def callback_call_spawn_turtle(self, future):
+        try:
+            response = future.result()
+            self.get_logger().info("CLEARED PATH!")
+   
+        except Exception as e:
+            self.get_logger().error("service call failed %r" % (e,))
+
+
+
 
     def publish_alive_turtles(self):
         msg = TurtleArray()
