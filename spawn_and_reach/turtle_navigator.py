@@ -5,6 +5,9 @@ import numpy as np
 from rclpy.node import Node
 from my_robot_interfaces.msg import Turtle
 from my_robot_interfaces.msg import TurtleArray
+from my_robot_interfaces.srv import CatchTurtle
+from functools import partial
+
 from turtlesim.msg import Pose
 from geometry_msgs.msg import Twist
 from math import atan2
@@ -16,38 +19,48 @@ class TurtleNavigator(Node):
         self.get_logger().info("Starting the Navigator!!")
         
         # Turtle's start and target positions
-        self.master_turtle = [None, None, None, None]
-        self.target_turtle = [None, None, None, None]
+        self.master_turtle = [None, None, None]
+        self.target_turtle = [None, None, None]
+        self.target_name = None
         self.alive_turtles = []
         
 
         # Create subscribers and publisher
-        self.alive_turtles_subscriber = self.create_subscription(TurtleArray, "alive_turtles", self.callback_alive_turtles, 1)
-        self.main_turtle_location_subscriber = self.create_subscription(Pose, "turtle1/pose", self.callback_main_turtle_location, 1)
-        self.velocity_publisher = self.create_publisher(Twist, "turtle1/cmd_vel", 1)
+        self.alive_turtles_subscriber = self.create_subscription(TurtleArray, "alive_turtles", self.callback_alive_turtles, 10)
+        self.main_turtle_location_subscriber = self.create_subscription(Pose, "turtle1/pose", self.callback_main_turtle_location, 10)
+        self.velocity_publisher = self.create_publisher(Twist, "turtle1/cmd_vel", 10)
 
-        self.create_timer(1.0/45, self.control_loop)#call the control loop in a 45 hz frequency
+        self.create_timer(1.0/100, self.control_loop)#call the control loop in a 100 hz frequency
 
     def control_loop(self):
-        if self.target_turtle[0] is not  None and self.master_turtle[0] is not None:
-            
+        if self.target_name is not  None and self.master_turtle[0] is not None:
+             
             self.target_turtle = np.array(self.target_turtle)
             self.master_turtle = np.array(self.master_turtle)
-            dx = np.linalg.norm(self.target_turtle[0]-self.master_turtle[0])
-            dy = np.linalg.norm(self.target_turtle[1]-self.master_turtle[1])
+            dx = (self.target_turtle[0]-self.master_turtle[0])
+            dy = (self.target_turtle[1]-self.master_turtle[1])
             arctan = atan2(dy,dx)
-            dtheta = self.master_turtle[2]-arctan
+            dtheta = arctan - self.master_turtle[2]
+            pi = 3.14
 
-            if dx**2+dy**2<=1: #stop condition and clear turtle
+            if dtheta>pi:
+                dtheta-=2*pi
+            if dtheta<-pi:
+                dtheta+=2*pi
+
+            if (dx**2+dy**2)**0.5<=1: #stop condition and clear turtle
                 dx = 0.0
                 dy = 0.0
                 dtheta = 0.0
-                self.target_turtle[:] = [None, None, None, None]
-                self.alive_turtles.pop(0)
+                
+                print("stop!!")
+
+                #call the service /catch_turtle advertised by the turtle_spawner node#############
+                self.call_catch_turtle(self.target_name)
 
             msg = Twist()
-            msg.angular.z = dtheta
-            msg.linear.x = dx
+            msg.angular.z = 6.0*dtheta
+            msg.linear.x = 2*dx
             msg.linear.y = dy
 
             self.velocity_publisher.publish(msg)
@@ -55,25 +68,46 @@ class TurtleNavigator(Node):
 
         
         else:
-            print("check!!#")
+            
             pass
 
 
+    ################This Only passes the catched turtle name to the turtles_manager node!########################
+    def call_catch_turtle(self,name):
+        client = self.create_client(CatchTurtle,"catch_turtle")
+        while not client.wait_for_service(1.0):
+            self.get_logger().warn("waiting for server catch_turtle")
+        
+        request = CatchTurtle.Request()
+        request.name = name
+
+        future = client.call_async(request)
+        future.add_done_callback(partial(self.callback_call_catch_turtle))  # this is like spining
+        
+    def callback_call_catch_turtle(self,future):
+        try:
+            response = future.result()
+            self.get_logger().info("success:" + str(response.success)) #can be True or False
+        except Exception as e:
+            self.get_logger().error("service call failed %r" % (e,))
+
+     ############################################################################   
 
 
     def callback_main_turtle_location(self, msg):
         self.master_turtle[0] = msg.x
         self.master_turtle[1] = msg.y
         self.master_turtle[2] = msg.theta
-        
+
 
     def callback_alive_turtles(self, msg):
         self.alive_trutles = msg.turtles
         self.target_turtle[0] = (msg.turtles[0].x)
         self.target_turtle[1] = (msg.turtles[0].y)
         self.target_turtle[2] = (msg.turtles[0].theta)
-        #self.target_turtle[3] = msg.turtles[0].name
-        print(self.target_turtle)
+        self.target_name = msg.turtles[0].name
+        print("the target name is:",self.target_name)
+        
 
 
 
