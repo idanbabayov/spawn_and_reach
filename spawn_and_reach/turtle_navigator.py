@@ -5,7 +5,7 @@ import numpy as np
 from rclpy.node import Node
 from my_robot_interfaces.msg import Turtle
 from my_robot_interfaces.msg import TurtleArray
-#from turtlesim.msg import Pose
+from turtlesim.msg import Pose
 from geometry_msgs.msg import Twist
 from math import atan2
 
@@ -16,19 +16,47 @@ class TurtleNavigator(Node):
         self.get_logger().info("Starting the Navigator!!")
         
         # Turtle's start and target positions
-        self.master_turtle = np.array([-0.1, 0.0, 0.0])  # Initial position
-        self.target_turtle = np.array([-0.1, 0.0, 0.0])  # Target position
+        self.master_turtle = [None, None, None, None]
+        self.target_turtle = [None, None, None, None]
+        self.alive_turtles = []
         
 
         # Create subscribers and publisher
-        self.alive_turtles_subscriber = self.create_subscription(TurtleArray, "alive_turtles", self.callback_turtle_location, 10)
+        self.alive_turtles_subscriber = self.create_subscription(TurtleArray, "alive_turtles", self.callback_alive_turtles, 1)
         self.main_turtle_location_subscriber = self.create_subscription(Pose, "turtle1/pose", self.callback_main_turtle_location, 1)
         self.velocity_publisher = self.create_publisher(Twist, "turtle1/cmd_vel", 1)
 
-        self.create_timer(2.0, self.control_loop)
+        self.create_timer(1.0/45, self.control_loop)#call the control loop in a 45 hz frequency
 
     def control_loop(self):
-        pass
+        if self.target_turtle[0] is not  None and self.master_turtle[0] is not None:
+            
+            self.target_turtle = np.array(self.target_turtle)
+            self.master_turtle = np.array(self.master_turtle)
+            dx = np.linalg.norm(self.target_turtle[0]-self.master_turtle[0])
+            dy = np.linalg.norm(self.target_turtle[1]-self.master_turtle[1])
+            arctan = atan2(dy,dx)
+            dtheta = self.master_turtle[2]-arctan
+
+            if dx**2+dy**2<=1: #stop condition and clear turtle
+                dx = 0.0
+                dy = 0.0
+                dtheta = 0.0
+                self.target_turtle[:] = [None, None, None, None]
+                self.alive_turtles.pop(0)
+
+            msg = Twist()
+            msg.angular.z = dtheta
+            msg.linear.x = dx
+            msg.linear.y = dy
+
+            self.velocity_publisher.publish(msg)
+
+
+        
+        else:
+            print("check!!#")
+            pass
 
 
 
@@ -37,10 +65,16 @@ class TurtleNavigator(Node):
         self.master_turtle[0] = msg.x
         self.master_turtle[1] = msg.y
         self.master_turtle[2] = msg.theta
+        
 
-    def callback_turtle_location(self, msg):
-        self.self.target_turtle[0] = msg.x
-        self.self.target_turtle[1] = msg.y
+    def callback_alive_turtles(self, msg):
+        self.alive_trutles = msg.turtles
+        self.target_turtle[0] = (msg.turtles[0].x)
+        self.target_turtle[1] = (msg.turtles[0].y)
+        self.target_turtle[2] = (msg.turtles[0].theta)
+        #self.target_turtle[3] = msg.turtles[0].name
+        print(self.target_turtle)
+
 
 
 

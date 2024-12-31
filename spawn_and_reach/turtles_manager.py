@@ -13,7 +13,7 @@ class TurtlesManager(Node):
     def __init__(self):
         super().__init__("Turtles_manager") #the name of the node
         self.get_logger().info("Welcome to the game!")
-        self.create_timer(4.0, self.turtle_spawner) # Pass the function reference, not call it.
+        self.create_timer(5.0, self.turtle_spawner) # Pass the function reference, not call it.
         self.alive_turtles_publisher = self.create_publisher(TurtleArray,"alive_turtles",10)
         self.alive_turtles = []
 
