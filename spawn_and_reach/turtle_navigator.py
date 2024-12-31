@@ -61,7 +61,7 @@ class TurtleNavigator(Node):
             msg = Twist()
             msg.angular.z = 6.0*dtheta
             msg.linear.x = 2*dx
-            msg.linear.y = dy
+            msg.linear.y = 2*dy
 
             self.velocity_publisher.publish(msg)
 
