@@ -23,6 +23,7 @@ class TurtleNavigator(Node):
         self.target_turtle = [None, None, None]
         self.target_name = None
         self.alive_turtles = []
+
         
 
         # Create subscribers and publisher
@@ -34,7 +35,7 @@ class TurtleNavigator(Node):
 
     def control_loop(self):
         if self.target_name is not  None and self.master_turtle[0] is not None:
-             
+
             self.target_turtle = np.array(self.target_turtle)
             self.master_turtle = np.array(self.master_turtle)
             dx = (self.target_turtle[0]-self.master_turtle[0])
@@ -52,11 +53,12 @@ class TurtleNavigator(Node):
                 dx = 0.0
                 dy = 0.0
                 dtheta = 0.0
-                
                 print("stop!!")
-
                 #call the service /catch_turtle advertised by the turtle_spawner node#############
                 self.call_catch_turtle(self.target_name)
+                self.target_name = None
+                
+
 
             msg = Twist()
             msg.angular.z = 6.0*dtheta

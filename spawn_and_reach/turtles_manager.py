@@ -48,7 +48,7 @@ class TurtlesManager(Node):
             respone = future.result()
             self.clear_path()
             #self.get_logger().info("The turtle: " +response.name + " has been killed!")
-            #self.publish_alive_turtles()
+            self.publish_alive_turtles()
         except Exception as e:
             self.get_logger().error("service call failed %r" % (e,))
     
