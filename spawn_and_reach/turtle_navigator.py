@@ -104,11 +104,12 @@ class TurtleNavigator(Node):
 
     def callback_alive_turtles(self, msg):
         self.alive_trutles = msg.turtles
-        self.target_turtle[0] = (msg.turtles[0].x)
-        self.target_turtle[1] = (msg.turtles[0].y)
-        self.target_turtle[2] = (msg.turtles[0].theta)
-        self.target_name = msg.turtles[0].name
-        print("the target name is:",self.target_name)
+        if len (self.alive_trutles)>0:
+            self.target_turtle[0] = (msg.turtles[0].x)
+            self.target_turtle[1] = (msg.turtles[0].y)
+            self.target_turtle[2] = (msg.turtles[0].theta)
+            self.target_name = msg.turtles[0].name
+            print("the target name is:",self.target_name)
         
 
 

@@ -15,7 +15,7 @@ class TurtlesManager(Node):
     def __init__(self):
         super().__init__("Turtles_manager") #the name of the node
         self.get_logger().info("Welcome to the game!")
-        self.create_timer(5.0, self.turtle_spawner) # Pass the function reference, not call it.
+        self.create_timer(2.0, self.turtle_spawner) # Pass the function reference, not call it.
         self.alive_turtles_publisher = self.create_publisher(TurtleArray,"alive_turtles",10)
         self.catch_server = self.create_service(CatchTurtle,"catch_turtle",self.callback_catch_turtle)
         self.alive_turtles = []
@@ -63,7 +63,7 @@ class TurtlesManager(Node):
         future = client.call_async(request)
         future.add_done_callback(partial(self.callback_call_clear_path))  # this is like spining
 
-    def callback_call_spawn_turtle(self, future):
+    def callback_call_clear_path(self, future):
         try:
             response = future.result()
             self.get_logger().info("CLEARED PATH!")
