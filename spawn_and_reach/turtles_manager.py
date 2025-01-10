@@ -15,7 +15,9 @@ class TurtlesManager(Node):
     def __init__(self):
         super().__init__("Turtles_manager") #the name of the node
         self.get_logger().info("Welcome to the game!")
-        self.create_timer(2.0, self.turtle_spawner) # Pass the function reference, not call it.
+        self.declare_parameter("spawn_frequency",2.0)#The second is a default value
+        self.spawn_frequency = self.get_parameter("spawn_frequency").value
+        self.create_timer(self.spawn_frequency, self.turtle_spawner) # Pass the function reference, not call it.
         self.alive_turtles_publisher = self.create_publisher(TurtleArray,"alive_turtles",10)
         self.catch_server = self.create_service(CatchTurtle,"catch_turtle",self.callback_catch_turtle)
         self.alive_turtles = []
